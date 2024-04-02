@@ -16,7 +16,6 @@ import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.annotation.Transient;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
@@ -32,34 +31,28 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @EntityListeners(AuditingEntityListener.class)
 public class EntityAuditLogicalExtension<A> {
 
-  @Transient
   @ColumnDefault(TRUE)
   @Comment("사용 여부")
   protected Boolean useFlag;
 
-  @Transient
   @ColumnDefault(FALSE)
   @Comment("삭제 여부")
   protected Boolean deleteFlag;
 
-  @Transient
   @CreatedDate
   @Comment("등록 날짜 시간")
   protected LocalDateTime createAt;
 
-  @Transient
   @LastModifiedDate
   @Comment("마지막 수정 날짜 시간")
   protected LocalDateTime updateAt;
 
-  @Transient
   @CreatedBy
   @ManyToOne(fetch = LAZY)
   @JoinColumn(name = "creator_id")
   @Comment("등록자 일련 번호")
   protected A creator;
 
-  @Transient
   @LastModifiedBy
   @ManyToOne(fetch = LAZY)
   @JoinColumn(name = "updater_id")

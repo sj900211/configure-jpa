@@ -11,7 +11,6 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Comment;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.annotation.Transient;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
@@ -26,22 +25,18 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @EntityListeners(AuditingEntityListener.class)
 public class EntityLogicalExtension {
 
-  @Transient
   @ColumnDefault(TRUE)
   @Comment("사용 여부")
   protected Boolean useFlag;
 
-  @Transient
   @ColumnDefault(FALSE)
   @Comment("삭제 여부")
   protected Boolean deleteFlag;
 
-  @Transient
   @CreatedDate
   @Comment("등록 날짜 시간")
   protected LocalDateTime createAt;
 
-  @Transient
   @LastModifiedDate
   @Comment("마지막 수정 날짜 시간")
   protected LocalDateTime updateAt;

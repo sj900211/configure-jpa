@@ -11,7 +11,6 @@ import lombok.Getter;
 import org.hibernate.annotations.Comment;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Transient;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
@@ -27,12 +26,10 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @EntityListeners(AuditingEntityListener.class)
 public class EntityAuditPhysicalExtension<A> {
 
-  @Transient
   @CreatedDate
   @Comment("등록 날짜 시간")
   protected LocalDateTime createAt;
 
-  @Transient
   @CreatedBy
   @ManyToOne(fetch = LAZY)
   @JoinColumn(name = "creator_id")

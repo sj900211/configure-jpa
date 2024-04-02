@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import lombok.Getter;
 import org.hibernate.annotations.Comment;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Transient;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 /**
@@ -21,7 +20,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @EntityListeners(AuditingEntityListener.class)
 public class EntityPhysicalExtension {
 
-  @Transient
   @CreatedDate
   @Comment("등록 날짜 시간")
   protected LocalDateTime createAt;
