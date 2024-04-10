@@ -1,8 +1,6 @@
 package run.freshr.common.extensions.entity;
 
 import static jakarta.persistence.FetchType.LAZY;
-import static run.freshr.common.configurations.DefaultColumnConfiguration.FALSE;
-import static run.freshr.common.configurations.DefaultColumnConfiguration.TRUE;
 
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.JoinColumn;
@@ -10,7 +8,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
 import java.time.LocalDateTime;
 import lombok.Getter;
-import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Comment;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
@@ -31,11 +28,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @EntityListeners(AuditingEntityListener.class)
 public class EntityAuditLogicalExtension<A> {
 
-  @ColumnDefault(TRUE)
   @Comment("사용 여부")
   protected Boolean useFlag;
 
-  @ColumnDefault(FALSE)
   @Comment("삭제 여부")
   protected Boolean deleteFlag;
 
@@ -58,6 +53,18 @@ public class EntityAuditLogicalExtension<A> {
   @JoinColumn(name = "updater_id")
   @Comment("수정자 일련 번호")
   protected A updater;
+
+  /**
+   * 등록 처리
+   *
+   * @apiNote 등록 처리
+   * @author FreshR
+   * @since 2024. 4. 3. 오전 9:50:45
+   */
+  protected void create() {
+    this.useFlag = true;
+    this.deleteFlag = false;
+  }
 
   /**
    * 삭제 처리

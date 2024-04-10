@@ -1,7 +1,5 @@
 # Configure > JPA
 > JPA 설정 및 정의
-> - ## [DefaultColumnConfiguration](./src/main/java/run/freshr/common/configurations/DefaultColumnConfiguration.java)
->> RDB Column 의 기본값을 정의
 > - ## [JpaConfiguration](./src/main/java/run/freshr/common/configurations/JpaConfiguration.java)
 >> JPA 설정
 > - ## [QueryDslConfiguration](./src/main/java/run/freshr/common/configurations/QueryDslConfiguration.java)

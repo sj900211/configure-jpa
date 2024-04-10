@@ -3,25 +3,19 @@ package run.freshr.common.utils;
 import static java.util.Objects.isNull;
 import static java.util.Optional.ofNullable;
 import static org.springframework.data.domain.PageRequest.of;
-import static run.freshr.common.utils.StringUtil.uuidWithoutHyphen;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
-import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.dsl.EntityPathBase;
 import com.querydsl.core.types.dsl.StringPath;
 import com.querydsl.core.types.dsl.Wildcard;
 import com.querydsl.jpa.impl.JPAQuery;
-import io.jsonwebtoken.Claims;
-import java.util.HashMap;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
-import run.freshr.common.data.CursorClaimData;
 import run.freshr.common.data.CursorData;
-import run.freshr.common.exceptions.ParameterException;
 import run.freshr.common.extensions.enumerations.SearchEnumExtension;
 import run.freshr.common.extensions.request.SearchExtension;
 import run.freshr.common.functional.CursorPagingFunctional;
@@ -140,108 +134,61 @@ public class QueryUtilAware {
   /**
    * Cursor 페이징 처리
    *
-   * @param <E>        Entity
-   * @param <Q>        Entity 의 Path
-   * @param query      JPA Query
-   * @param path       검색 대상의 QueryDsl Path
-   * @param size       조회할 데이터 수
-   * @param predicates 검색 조건 - Where
-   * @param orders     정렬 조건 - Order by
+   * @param <E>           Entity
+   * @param <Q>           Entity 의 Path
+   * @param query         JPA Query
+   * @param path          검색 대상의 QueryDsl Path
+   * @param size          조회할 데이터 수
+   * @param orderList     order list
+   * @param nextPageToken next page token
    * @return cursor data
    * @apiNote Cursor 페이징 처리
    * @author FreshR
    * @since 2024. 3. 28. 오전 9:41:09
    */
   public static <E, Q extends EntityPathBase<E>> CursorData<E> cursor(JPAQuery<E> query,
-      Q path, Integer size, List<Predicate> predicates, List<OrderSpecifier<?>> orders) {
-    return cursor(query, path, 0, size, predicates, orders);
+      Q path, Integer size, List<OrderSpecifier<?>> orderList, String nextPageToken) {
+    return cursor(query, path, 0, size, orderList, nextPageToken);
   }
 
   /**
    * Cursor 페이징 처리
    *
-   * @param <E>       Entity
-   * @param <Q>       Entity 의 Path
-   * @param query     JPA Query
-   * @param path      검색 대상의 QueryDsl Path
-   * @param pageToken 페이지 토큰
+   * @param <E>           Entity
+   * @param <Q>           Entity 의 Path
+   * @param query         JPA Query
+   * @param path          검색 대상의 QueryDsl Path
+   * @param page          조회할 페이지 수
+   * @param size          조회할 데이터 수
+   * @param orderList     order list
+   * @param nextPageToken next page token
    * @return cursor data
    * @apiNote Cursor 페이징 처리
    * @author FreshR
    * @since 2024. 3. 28. 오전 9:41:09
    */
   public static <E, Q extends EntityPathBase<E>> CursorData<E> cursor(JPAQuery<E> query,
-      Q path, String pageToken) {
-    if (!JwtUtil.validateExpired(pageToken)) {
-      throw new ParameterException("wrong page token");
-    }
-
-    Claims claims = JwtUtil.get(pageToken);
-    Object claimsData = claims.get("data");
-
-    if (isNull(claimsData)) {
-      throw new ParameterException("not found page token data");
-    }
-
-    CursorClaimData data = MapperUtil.map(claimsData, CursorClaimData.class);
-
-    Integer page = data.getPage();
-    Integer size = data.getSize();
-    List<Predicate> predicates = data.getPredicates();
-    List<OrderSpecifier<?>> orders = data.getOrders();
-
-    return cursor(query, path, page, size, predicates, orders);
-  }
-
-  /**
-   * Cursor 페이징 처리
-   *
-   * @param <E>        Entity
-   * @param <Q>        Entity 의 Path
-   * @param query      JPA Query
-   * @param path       검색 대상의 QueryDsl Path
-   * @param page       조회할 페이지 수
-   * @param size       조회할 데이터 수
-   * @param predicates 검색 조건 - Where
-   * @param orders     정렬 조건 - Order by
-   * @return cursor data
-   * @apiNote Cursor 페이징 처리
-   * @author FreshR
-   * @since 2024. 3. 28. 오전 9:41:09
-   */
-  public static <E, Q extends EntityPathBase<E>> CursorData<E> cursor(JPAQuery<E> query,
-      Q path, Integer page, Integer size, List<Predicate> predicates,
-      List<OrderSpecifier<?>> orders) {
+      Q path, Integer page, Integer size, List<OrderSpecifier<?>> orderList, String nextPageToken) {
 
     final CursorPagingFunctional<E, Q> CURSOR_PAGING_FUNCTIONAL = (functionalQuery, functionalPath,
-        functionalPage, functionalSize, functionalWheres, functionalOrders) -> {
-      PageRequest pageRequest = of(functionalPage, functionalSize);
-
-      functionalQuery.where(functionalWheres.toArray(new Predicate[0]));
-
+        functionalPage, functionalSize, functionalOrders, functionalNextPageToken) -> {
+      PageRequest pageRequest = of(functionalPage - 1, functionalSize);
       Long totalCount = functionalQuery.select(Wildcard.count).fetchOne();
 
-      functionalQuery.select(functionalPath)
-          .offset(pageRequest.getOffset()).limit(pageRequest.getPageSize())
-          .orderBy(functionalOrders.toArray(new OrderSpecifier<?>[0]));
+      functionalQuery.select(functionalPath).offset(pageRequest.getOffset())
+          .limit(pageRequest.getPageSize());
+
+      if (!isNull(functionalOrders) && !functionalOrders.isEmpty()) {
+        functionalQuery.orderBy(functionalOrders.toArray(new OrderSpecifier<?>[0]));
+      }
 
       List<E> result = functionalQuery.fetch();
 
-      CursorClaimData nextData = CursorClaimData.builder()
-          .page(functionalPage + 1)
-          .size(functionalSize)
-          .predicates(functionalWheres)
-          .orders(functionalOrders)
-          .build();
-      String nextPageToken = JwtUtil.generate(uuidWithoutHyphen(), new HashMap<>() {{
-        put("data", nextData);
-      }});
-
-      return new CursorData<>(result, pageRequest,
-          ofNullable(totalCount).orElse(0L), nextPageToken);
+      return new CursorData<>(result, pageRequest, ofNullable(totalCount).orElse(0L),
+          nextPageToken);
     };
 
-    return CURSOR_PAGING_FUNCTIONAL.paging(query, path, page, size, predicates, orders);
+    return CURSOR_PAGING_FUNCTIONAL.paging(query, path, page, size, orderList, nextPageToken);
   }
 
 }
